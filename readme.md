@@ -69,7 +69,7 @@ nano .env
 
 The actual configuration of the productive environment is stored on the S7 network storage `./Projekte/BWCloudServer/`.
 
-Now, we can initialise the doccano container:
+Now, we can initialize the doccano container:
 
 ```
 sudo docker-compose -f docker-compose.prod.yml --env-file .env up
@@ -85,6 +85,10 @@ Then press <kbd>Ctrl</kbd> + <kbd>B</kbd> <kbd>d</kbd> to leave session.
 
 Now we can access the doccano annotation tools via web browser.
 
+To stop the conatiner execute:
+```
+sudo docker-compose -f docker-compose.prod.yml down 
+```
 
 ## Get doccano running simultaneaously with the Open Discourse database
 
@@ -127,4 +131,27 @@ Now we can explore the data (e.g. via [pgAdmin](https://www.pgadmin.org/) or in 
 
 But if we want to have doccano and Open Discourse on the same postgres instance, we need to adapt the deployment procedure as follows:
 
-First, make sure, no containers are running and all ... 
+First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image.
+
+Therefore, we use a specific docker-compose yaml, here from this repository: [/docker_yaml/](docker_yaml/docker-compose.db_with_opendiscourse.yml).
+
+Next, we initialize the doccano contaier, again with a reweritten docker-compose yaml (which skips the initialization of the PostgreSQL service
+
+
+```
+cp -r ./annotation_pipeline/docker_yaml/* ./doccano/docker/
+cd doccano/docker/
+
+
+
+ 
+```
+To have a clean setup, first make sure, no containers are running and and all persistent docker volumes are cleaned.
+
+
+
+First we need a 
+
+```
+
+```
