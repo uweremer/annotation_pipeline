@@ -13,3 +13,11 @@ services:
       - "5432:5432"
     networks:
       - network-backend
+
+volumes:
+  postgres_data:
+
+networks:
+  network-backend:
+
+

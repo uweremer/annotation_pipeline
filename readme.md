@@ -139,9 +139,10 @@ Next, we initialize the doccano contaier, again with a reweritten docker-compose
 
 
 ```
-cp -r ./annotation_pipeline/docker_yaml/* ./doccano/docker/
+cp ./annotation_pipeline/docker_yaml/* ./doccano/docker/
 cd doccano/docker/
 
+sudo docker-compose -f docker-compose.db_with_opendiscourse.yml --env-file .env up
 
 
  
