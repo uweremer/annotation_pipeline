@@ -131,28 +131,41 @@ Now we can explore the data (e.g. via [pgAdmin](https://www.pgadmin.org/) or in 
 
 But if we want to have doccano and Open Discourse on the same postgres instance, we need to adapt the deployment procedure as follows:
 
-First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image.
+Before we proceed, it might be necessary to incerease timeouts:
+```
+export DOCKER_CLIENT_TIMEOUT=120
+export COMPOSE_HTTP_TIMEOUT=120
+```
 
-Therefore, we use a specific docker-compose yaml, here from this repository: [/docker_yaml/](docker_yaml/docker-compose.db_with_opendiscourse.yml).
-
-Next, we initialize the doccano contaier, again with a reweritten docker-compose yaml (which skips the initialization of the PostgreSQL service
+We copy the customized docker yaml files from this repository [/docker_yaml/](/docker_yaml/) to the docker path of the doccano folders `./doccano/docker/`. 
 
 
 ```
 cp ./annotation_pipeline/docker_yaml/* ./doccano/docker/
 cd doccano/docker/
-
-sudo docker-compose -f docker-compose.db_with_opendiscourse.yml --env-file .env up
-
-
- 
 ```
+
+First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image. The corresponding yaml fileis [/docker_yaml/](/docker_yaml/docker-compose.db_with_opendiscourse.yml)[/docker_yaml/docker-compose.db_with_opendiscourse.yml]
+
+```
+sudo docker-compose -f docker-compose.db_with_opendiscourse.yml --env-file .env up
+```
+
+To properly shut down the service:
+``` 
+sudo docker-compose -f docker-compose.db_with_opendiscourse.yml down
+```
+
+
+
+Next, we initialize the doccano contaier, again with a reweritten docker-compose yaml (which skips the initialization of the PostgreSQL service).
+
+
+
 To have a clean setup, first make sure, no containers are running and and all persistent docker volumes are cleaned.
 
-
-
-First we need a 
-
+Hard reset of docker:
 ```
-
+docker system prune -a 
+docker volume prune
 ```
