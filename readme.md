@@ -145,7 +145,7 @@ cp ./annotation_pipeline/docker_yaml/* ./doccano/docker/
 cd doccano/docker/
 ```
 
-First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image. The corresponding yaml file is [/docker_yaml/](/docker_yaml/docker-compose.db_with_opendiscourse.yml).
+First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image. The corresponding yaml file is [/docker_yaml/docker-compose.db_with_opendiscourse.yml](/docker_yaml/docker-compose.db_with_opendiscourse.yml).
 
 Additionaly, we need to provide the `.env` file (already mentioned above).
 
@@ -158,6 +158,10 @@ To properly shut down the service:
 sudo docker-compose -f docker-compose.db_with_opendiscourse.yml down
 ```
 
+```
+sudo docker-compose -f docker-compose.doccano_no_db.yml --env-file .env up
+
+```
 
 
 Next, we initialize the doccano contaier, again with a reweritten docker-compose yaml (which skips the initialization of the PostgreSQL service).
@@ -168,6 +172,7 @@ To have a clean setup, first make sure, no containers are running and and all pe
 
 Hard reset of docker:
 ```
+sudo systemctl restart docker
 docker system prune -a 
 docker volume prune
 ```
