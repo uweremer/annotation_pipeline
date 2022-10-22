@@ -29,6 +29,8 @@ services:
       ALLOW_SIGNUP: "False"
       DEBUG: "False"
       DJANGO_SETTINGS_MODULE: "config.settings.production"
+    depends_on:
+      - postgres
    networks:
       - network-backend
       - network-frontend
