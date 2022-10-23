@@ -1,5 +1,18 @@
 # Sowi Stuttgart CSS Lab Annotation Pipeline 
 
+**Table of contents**
+
+- [Summary](#summary)
+- [Initial server configuration](#initial-server-configuration)
+- [Get doccano running](#get-doccano-running)
+- [Get doccano running simultaneaously with the Open Discourse database](#get-doccano-running-simultaneaously-with-the-open-discourse-database)
+  - [Get the Open Discourse database](#get-the-open-discourse-database)
+  - [Start with custom docker-compose yaml](#start-with-custom-docker-compose-yaml)
+  - [Notes:](#notes-)
+- [Retreive data](#retreive-data)
+
+## Summary
+
 This repository contains files and documentation to set up an annotation pipeline for machine learning on the bwcloud OpenStack server.
 
 Access information, credentials, and private key-file are stored on the S7 network storage `/Projekte/BWCloudServer/`
@@ -49,7 +62,7 @@ sudo systemctl enable containerd.service
 ```
 
 
-# Get doccano running
+## Get doccano running
 
 For the comprehensive doccano documentation see https://doccano.github.io/doccano/
 
@@ -124,18 +137,12 @@ If we were only interested in the database (without having a doccano environment
 docker run --env POSTGRES_USER=postgres --env POSTGRES_DB=postgres --env POSTGRES_PASSWORD=postgres  -p 5432:5432 -d ghcr.io/open-discourse/open-discourse/database
 ```
 
-Now we can explore the data (e.g. via [pgAdmin](https://www.pgadmin.org/) or in R with the package [RPostgreSQL](https://cran.r-project.org/web/packages/RPostgreSQL/index.html):
+Now we can explore the data (e.g. via [pgAdmin](https://www.pgadmin.org/) or in R with the package [RPostgreSQL](https://cran.r-project.org/web/packages/RPostgreSQL/index.html) ([see section 'retreive data'](#retreive-data)).
 
 
-### Adapt the docker-compose yaml
+### Start with custom docker-compose yaml
 
 But if we want to have doccano and Open Discourse on the same postgres instance, we need to adapt the deployment procedure as follows:
-
-Before we proceed, it might be necessary to incerease timeouts:
-```
-export DOCKER_CLIENT_TIMEOUT=120
-export COMPOSE_HTTP_TIMEOUT=120
-```
 
 We copy the customized docker yaml files from this repository [/docker_yaml/](/docker_yaml/) to the docker path of the doccano folders `./doccano/docker/`. 
 
@@ -145,30 +152,33 @@ cp ./annotation_pipeline/docker_yaml/* ./doccano/docker/
 cd doccano/docker/
 ```
 
-First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image. The corresponding yaml file is [/docker_yaml/docker-compose.db_with_opendiscourse.yml](/docker_yaml/docker-compose.db_with_opendiscourse.yml).
+First, we need do start the Open Discourse container, as it provides also a PostgreSQL service within the image. The corresponding yaml file is [/docker_yaml/docker-compose.od_db.yml](/docker_yaml/docker-compose.od_db.yml).
 
 Additionaly, we need to provide the `.env` file (already mentioned above).
 
 ```
-sudo docker-compose -f docker-compose.db_with_opendiscourse.yml --env-file .env up
+sudo docker-compose -f docker-compose.od_db.yml --env-file .env up
 ```
+
+Now we can access the PostgreSQL Server via pgAdmin, or R, or Python...
 
 To properly shut down the service:
 ``` 
-sudo docker-compose -f docker-compose.db_with_opendiscourse.yml down
+sudo docker-compose -f docker-compose.od_db.yml down
 ```
 
-```
-sudo docker-compose -f docker-compose.doccano_no_db.yml --env-file .env up
+Before we can star the doccano container, we have to initialize the doccano *database*, so that the docker-compse command for the doccano container finds a database that is ready to be populated. For now, I just create the `doccano` database via the pgAdmin on the database server we just created.
+
+Then we start the doccano container with docker-compose:
 
 ```
+sudo docker-compose -f docker-compose.doccano.yml --env-file .env up
+#sudo docker-compose -f docker-compose.doccano.yml --env-file .env down
+```
 
+### Notes:
 
-Next, we initialize the doccano contaier, again with a reweritten docker-compose yaml (which skips the initialization of the PostgreSQL service).
-
-
-
-To have a clean setup, first make sure, no containers are running and and all persistent docker volumes are cleaned.
+To have a clean setup, make sure that the persistent docker volumes are newly initialized. But be aware: do not prune the volumes if they already contain productive data. Make sure to hava a backup of the data! 
 
 Hard reset of docker:
 ```
@@ -176,3 +186,59 @@ sudo systemctl restart docker
 docker system prune -a 
 docker volume prune
 ```
+
+
+## Retreive data 
+
+See how to retreive data from the database with R and the packages [DBI](https://cran.r-project.org/web/packages/DBI/index.html) [RPostgres](https://cran.r-project.org/web/packages/RPostgres/index.html): 
+
+```
+# Install dependencies
+install.packages("DBI")
+library(DBI)
+install.packages("RPostgres")
+library(RPostgres)
+```
+
+Now we can create a connection to the database (remember to connect to the university network via VPN).
+Please get the credentials from the `.env` file.
+
+```
+#dbname 'next' contains the opendiscourse data
+con <- dbConnect(Postgres(),dbname = 'next',  
+                 host = '$HOST_IP',
+                 port = 5432,
+                 user = '$POSTGRES_USER',
+                 password = 'POSTGRES_PASSWORD',
+                 options='-c search_path=open_discourse')
+```
+
+
+Now we can display the existing tables for this connected database:
+
+```
+dbListTables(con)
+```
+
+Or display the existing fields for a specific table in the database:
+
+```
+dbListFields(con, "speeches")
+```
+
+And we can download the whole table from the database into a dataframe:
+
+```
+# Do not run! 920000 rows, 13 cols
+#wahlen <- dbReadTable(con, "speeches")
+```
+
+Of course we could do SQL queries...
+```
+query <-  dbSendQuery(con, "SELECT * FROM speeches WHERE
+                    speeches.last_name = 'merkel' ")
+df_neu <- dbFetch(query)
+head(df_neu)
+dbClearResult(query)
+```
+

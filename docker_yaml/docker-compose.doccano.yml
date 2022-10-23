@@ -1,19 +1,6 @@
 version: "3.7"
 services:
 
-  postgres:
-    image: ghcr.io/open-discourse/open-discourse/database
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-      POSTGRES_DB: "${POSTGRES_DB}"
-    ports:
-      - "5432:5432"
-    networks:
-      - network-backend
-
   backend:
     image: doccano/doccano:backend
     volumes:
@@ -25,13 +12,11 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       CELERY_BROKER_URL: "amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq"
-      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/doccano?sslmode=disable"
       ALLOW_SIGNUP: "False"
       DEBUG: "False"
       DJANGO_SETTINGS_MODULE: "config.settings.production"
-    depends_on:
-      - postgres
-   networks:
+    networks:
       - network-backend
       - network-frontend
 
@@ -44,7 +29,7 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       CELERY_BROKER_URL: "amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq"
-      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/doccano?sslmode=disable"
       DJANGO_SETTINGS_MODULE: "config.settings.production"
     depends_on:
       - rabbitmq
@@ -57,7 +42,7 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       CELERY_BROKER_URL: "amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq"
-      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/doccano?sslmode=disable"
       DJANGO_SETTINGS_MODULE: "config.settings.production"
       FLOWER_BASIC_AUTH: "${FLOWER_BASIC_AUTH}" # Format "username:password"
     depends_on:
@@ -102,7 +87,6 @@ services:
       - network-frontend
 
 volumes:
-  postgres_data:
   static_volume:
   media:
   tmp_file:
