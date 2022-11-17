@@ -4,10 +4,10 @@ library(DBI)
 library(RPostgres)
 
 con <- dbConnect(Postgres(),dbname = 'next',  
-                 host = '193.196.39.254',
+                 host = IP,
                  port = 5432,
-                 user = 'postgres',
-                 password = 'postgres',
+                 user = USER,
+                 password = PASS,
                  options="-c search_path=open_discourse")
 
 dbListTables(con)
